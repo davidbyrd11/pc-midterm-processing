@@ -20,22 +20,31 @@
   * for long sounds (like entire songs, for example) because the entire file is
   * kept in memory.
   * <p>
-  * Use 'k' and 's' to trigger a kick drum sample and a snare sample, respectively. 
+  * Use 'k' and 's' to trigger a ap[0] drum sample and a ap[1] sample, respectively. 
   * You will see their waveforms drawn when they are played back.
   */
 
 import ddf.minim.*;
+import processing.serial.*;
 
 Minim minim;
-AudioPlayer kick;
-AudioPlayer snare;
+//AudioPlayer ap[0];
+//AudioPlayer ap[1];
+AudioPlayer[] ap;
+String soundFiles[] = {"ghetto.mp3", "background.mp3"};
 
 void setup () {
   size(512, 200, P3D);
   minim = new Minim(this);
+  
+  String portName = Serial.list()[0];
+  Serial myPort = new Serial(this, portName, 9600);
+  background(0);
 
+  ap = loadAudio(soundFiles); // loads the audio files into ap.
+  
   // load BD.wav from the data folder
-  kick = minim.loadFile( "ghetto.mp3" );
+  /*ap[0] = minim.loadFile( "ghetto.mp3" );
 
   // An AudioSample will spawn its own audio processing Thread, 
   // and since audio processing works by generating one buffer 
@@ -48,11 +57,11 @@ void setup () {
   // the buffer size.
   
   // if a file doesn't exist, loadSample will return null
-  if ( kick == null ) println("Didn't get kick!");
+  if ( ap[0] == null ) println("Didn't get ap[0]!");
   
   // load SD.wav from the data folder
-  snare = minim.loadFile("background.mp3" );
-  if ( snare == null ) println("Didn't get snare!");
+  ap[1] = minim.loadFile("background.mp3" );
+  if ( ap[1] == null ) println("Didn't get ap[1]!");*/
 }
 
 void draw () {
@@ -60,18 +69,38 @@ void draw () {
   stroke(255);
   
   // use the mix buffer to draw the waveforms.
-  for (int i = 0; i < kick.bufferSize() - 1; i++) {
-    float x1 = map(i, 0, kick.bufferSize(), 0, width);
-    float x2 = map(i+1, 0, kick.bufferSize(), 0, width);
-    line(x1, 50 - kick.mix.get(i)*50, x2, 50 - kick.mix.get(i+1)*50);
-    line(x1, 150 - snare.mix.get(i)*50, x2, 150 - snare.mix.get(i+1)*50);
+  
+  for (int i = 0; i < ap[0].bufferSize() - 1; i++) {
+    float x1 = map(i, 0, ap[0].bufferSize(), 0, width);
+    float x2 = map(i+1, 0, ap[0].bufferSize(), 0, width);
+    line(x1, 50 - ap[0].mix.get(i)*50, x2, 50 - ap[0].mix.get(i+1)*50);
+    line(x1, 150 - ap[1].mix.get(i)*50, x2, 150 - ap[1].mix.get(i+1)*50);
   }
 }
 
+//void serialEvent(Serial myport){
+  //String
+//from taylor: I don't know if we need it so lets upload it without and see what happens then go from there 
 void keyPressed () {
-  if ( key == 's' ) 
-    if (snare.isPlaying())  { snare.pause(); } else { snare.play(); }
-  if ( key == 'k' )
-    if (kick.isPlaying())  { kick.pause(); } else { kick.play(); }
+  switch(key){
+    case 's':
+      if (ap[0].isPlaying())  { ap[0].pause(); } else { ap[0].play(); }
+      break;
+    case 'k':
+      if (ap[1].isPlaying())  { ap[1].pause(); } else { ap[1].play(); }
+      break;
+  }
 }
 
+AudioPlayer[] loadAudio(String names[]){
+  int sz = names.length;
+  AudioPlayer[] aFiles = new AudioPlayer[sz];
+  for(int i=0; i<sz; i++){
+    aFiles[i] = minim.loadFile(names[i]);
+    if(aFiles[i] == null){
+      println("Unable to load audio file:\t" + names[i]);
+    }
+  }
+  return aFiles;
+}
+    

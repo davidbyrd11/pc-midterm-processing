@@ -29,7 +29,7 @@ import processing.serial.*;
 
 Minim minim;
 AudioPlayer[] ap;
-String soundFiles[] = {"./sounds/conga_roll.aif", "./sounds/didg_groove_4.mp3"};
+String soundFiles[] = { "jf-hard.aif", "ghetto.mp3", "background.mp3", "electrobopbop.mp3"};
 String code = "";
 boolean codeAvail = false;
 
@@ -108,12 +108,12 @@ boolean stopAndRewind(int idx){
 /* This is only for debugging now. */
 void keyPressed () {
   switch(key){
-    case 'a': code = "10"; codeAvail = true; break;
-    case 's': code = "11"; codeAvail = true; break;/*
+    case 'a': code = "50"; codeAvail = true; break;
+    case 's': code = "51"; codeAvail = true; break;/*
       if (ap[0].isPlaying())  { ap[0].pause(); } else { ap[0].play(); }
       break;*/
-    case 'j': code = "20"; codeAvail = true; break;
-    case 'k': code = "21"; codeAvail = true; break; /*
+    case 'j': code = "40"; codeAvail = true; break;
+    case 'k': code = "41"; codeAvail = true; break; /*
       if (ap[1].isPlaying())  { ap[1].pause(); } else { ap[1].play(); }
       break;*/
   }
@@ -143,10 +143,16 @@ void serialEvent(Serial p) {
      2) ten's digit and above is the index
    If the index is greater than 0, calls the appropriate operation with the index and sets the
      return value to whatever the operation returns. */
-boolean processCode(String c) throws NumberFormatException{
+boolean processCode(String c){
   println(c);
   boolean ret = false;
-  int cnum = Integer.parseInt(c);
+  int cnum = 0;
+  try{
+     cnum = Integer.parseInt(c);
+  }
+  catch(NumberFormatException e){
+    println(e);
+  }
   int idx = cnum/10;
   int op = cnum%10;
   if(idx>0){

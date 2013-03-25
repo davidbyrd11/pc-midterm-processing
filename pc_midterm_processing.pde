@@ -27,19 +27,19 @@
 import ddf.minim.*;
 import processing.serial.*;
 
-Minim minim = new Minim(this);
+Minim minim;
 AudioPlayer[] ap;
-String soundFiles[] = {"./sounds/didg_groove_4.mp3", "conga_roll.aif"};
+String soundFiles[] = {"./sounds/conga_roll.aif", "./sounds/didg_groove_4.mp3"};
 String code = "";
 boolean codeAvail = false;
 
 void setup () {
   size(512, 200, P3D);
-  //minim = new Minim(this);
+  minim = new Minim(this);
   
   /* Open port and set to buffer until line line feed. */
-  String portName = Serial.list()[0];
-  Serial myPort = new Serial(this, portName, 9600);
+  String portName = "/dev/tty.usbmodemfa131";  //Serial.list()[0];
+  Serial myPort = new Serial(this, portName);
   myPort.bufferUntil(10);
   background(0);
 
@@ -99,7 +99,7 @@ boolean stopAndRewind(int idx){
   boolean ret = false;
   if(idx>=0 && idx<ap.length){
     ap[idx].pause();
-    ap[idx].rewind();
+    //ap[idx].rewind();
     ret = true;
   }
   return ret;
@@ -132,7 +132,7 @@ AudioPlayer[] loadAudio(String names[]){
   return aFiles;
 }
 
-void serialEven(Serial p) {
+void serialEvent(Serial p) {
   code = p.readString().trim();
   codeAvail = true;
 }
@@ -144,6 +144,7 @@ void serialEven(Serial p) {
    If the index is greater than 0, calls the appropriate operation with the index and sets the
      return value to whatever the operation returns. */
 boolean processCode(String c) throws NumberFormatException{
+  println(c);
   boolean ret = false;
   int cnum = Integer.parseInt(c);
   int idx = cnum/10;

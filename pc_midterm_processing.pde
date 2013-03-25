@@ -27,18 +27,20 @@
 import ddf.minim.*;
 import processing.serial.*;
 
-Minim minim;
-//AudioPlayer ap[0];
-//AudioPlayer ap[1];
+Minim minim = new Minim(this);
 AudioPlayer[] ap;
-String soundFiles[] = {"ghetto.mp3", "background.mp3"};
+String soundFiles[] = {"./sounds/didg_groove_4.mp3", "conga_roll.aif"};
+String code = "";
+boolean codeAvail = false;
 
 void setup () {
   size(512, 200, P3D);
-  minim = new Minim(this);
+  //minim = new Minim(this);
   
+  /* Open port and set to buffer until line line feed. */
   String portName = Serial.list()[0];
   Serial myPort = new Serial(this, portName, 9600);
+  myPort.bufferUntil(10);
   background(0);
 
   ap = loadAudio(soundFiles); // loads the audio files into ap.
@@ -68,6 +70,10 @@ void draw () {
   background(0);
   stroke(255);
   
+  if(codeAvail){
+    processCode(code);
+    codeAvail = false;
+  }
   // use the mix buffer to draw the waveforms.
   
   for (int i = 0; i < ap[0].bufferSize() - 1; i++) {
@@ -78,20 +84,42 @@ void draw () {
   }
 }
 
-//void serialEvent(Serial myport){
-  //String
-//from taylor: I don't know if we need it so lets upload it without and see what happens then go from there 
+/* Loops the specified soundfile in the list of soundfiles. */
+boolean play(int idx){
+  boolean ret = false;
+  if(idx>=0 && idx<ap.length){
+    ap[idx].loop();
+    ret = true;
+  }
+  return ret;
+}
+
+/* Pauses the specified soundfile in the list of soundfiles and rewinds it. */
+boolean stopAndRewind(int idx){
+  boolean ret = false;
+  if(idx>=0 && idx<ap.length){
+    ap[idx].pause();
+    ap[idx].rewind();
+    ret = true;
+  }
+  return ret;
+}
+
+/* This is only for debugging now. */
 void keyPressed () {
   switch(key){
-    case 's':
+    case 'a': code = "10"; codeAvail = true; break;
+    case 's': code = "11"; codeAvail = true; break;/*
       if (ap[0].isPlaying())  { ap[0].pause(); } else { ap[0].play(); }
-      break;
-    case 'k':
+      break;*/
+    case 'j': code = "20"; codeAvail = true; break;
+    case 'k': code = "21"; codeAvail = true; break; /*
       if (ap[1].isPlaying())  { ap[1].pause(); } else { ap[1].play(); }
-      break;
+      break;*/
   }
 }
 
+/* Load specified audio files into a list of file players. */
 AudioPlayer[] loadAudio(String names[]){
   int sz = names.length;
   AudioPlayer[] aFiles = new AudioPlayer[sz];
@@ -102,5 +130,31 @@ AudioPlayer[] loadAudio(String names[]){
     }
   }
   return aFiles;
+}
+
+void serialEven(Serial p) {
+  code = p.readString().trim();
+  codeAvail = true;
+}
+
+/* Process the code string.
+   Attempts to parse the string into an integer then splits the integer into two parts:
+     1) the one's digit is the operation code
+     2) ten's digit and above is the index
+   If the index is greater than 0, calls the appropriate operation with the index and sets the
+     return value to whatever the operation returns. */
+boolean processCode(String c) throws NumberFormatException{
+  boolean ret = false;
+  int cnum = Integer.parseInt(c);
+  int idx = cnum/10;
+  int op = cnum%10;
+  if(idx>0){
+    idx--; // decrement index to account for zero-indexed arrays.
+    switch(op){
+      case 0: ret = stopAndRewind(idx); break;
+      case 1: ret = play(idx); break;
+    }
+  }
+  return ret;
 }
     
